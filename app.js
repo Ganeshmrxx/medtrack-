@@ -48,6 +48,13 @@ async function loadFromCloud() {
             body: JSON.stringify({ userId, action: 'load' })
         });
         const result = await response.json();
+        
+        if (!response.ok) {
+            showToast(`Sync Fail: ${result.error || 'Check Vercel Connect'}`, 'var(--danger)');
+            updateSyncUI('Sync Fail', 'var(--danger)');
+            return;
+        }
+
         if (result.data) {
             medicines = result.data;
             localStorage.setItem('medTrack_data', JSON.stringify(medicines));
@@ -59,6 +66,7 @@ async function loadFromCloud() {
         }
     } catch (e) {
         updateSyncUI('Sync Error', 'var(--danger)');
+        showToast("Network Error: Check internet", "var(--danger)");
     }
 }
 
@@ -66,11 +74,18 @@ async function saveToCloud() {
     if (!userId) return;
     try {
         updateSyncUI('Saving...', 'var(--warning)');
-        await fetch('/api/storage', {
+        const response = await fetch('/api/storage', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId, action: 'save', data: medicines })
         });
+        const result = await response.json();
+        
+        if (!response.ok) {
+            updateSyncUI('Offline', 'var(--danger)');
+            return;
+        }
+        
         updateSyncUI('Synced', 'var(--success)');
     } catch (e) {
         updateSyncUI('Offline', 'var(--danger)');

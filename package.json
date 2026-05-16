@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Premium Medicine Tracker PWA",
   "main": "index.html",
+  "dependencies": {
+    "@vercel/kv": "latest"
+  },
   "scripts": {
     "start": "serve ."
   },
