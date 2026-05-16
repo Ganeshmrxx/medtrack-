@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedTrack | Intelligent Medicine Tracker</title>
+    <meta name="description" content="Track your medicine inventory, dosage, and refill dates with intelligent predictions.">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <link rel="stylesheet" href="style.css">
+    <!-- Ionicons for premium feel -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <h1>MedTrack.</h1>
+            </div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <button class="add-btn" onclick="showShoppingList()" style="background: var(--warning); box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);">
+                    <ion-icon name="cart-outline"></ion-icon>
+                    Shopping List
+                </button>
+                <button class="add-btn" onclick="requestNotificationPermission()" id="notif-btn" style="background: var(--glass-bg); box-shadow: none; padding: 0.8rem;">
+                    <ion-icon name="notifications-outline"></ion-icon>
+                </button>
+                <button class="add-btn" onclick="toggleModal(true)">
+                    <ion-icon name="add-outline"></ion-icon>
+                    Add Medicine
+                </button>
+            </div>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Medicines</div>
+                <div class="stat-value" id="total-meds">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Low Stock Alerts</div>
+                <div class="stat-value" id="low-stock-count" style="color: var(--danger)">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Refill Required (7 Days)</div>
+                <div class="stat-value" id="refill-soon">0</div>
+            </div>
+        </div>
+
+        <div class="med-grid" id="med-list">
+            <!-- Medicine cards will be injected here -->
+        </div>
+    </div>
+
+    <!-- Add Medicine Modal -->
+    <div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Medicine</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Setup your medication schedule</p>
+            </div>
+            <form id="med-form">
+                <div class="form-group">
+                    <label>Medicine Name</label>
+                    <input type="text" id="med-name" placeholder="e.g., Paracetamol 500mg" required>
+                </div>
+
+                <div class="form-group" id="shift-selection-group">
+                    <label>Dosage Shift (When to take?)</label>
+                    <div class="checkbox-group">
+                        <label class="check-item">
+                            <input type="checkbox" name="shift" value="Morning"> Morning
+                        </label>
+                        <label class="check-item">
+                            <input type="checkbox" name="shift" value="Afternoon"> Afternoon
+                        </label>
+                        <label class="check-item">
+                            <input type="checkbox" name="shift" value="Evening"> Evening
+                        </label>
+                        <label class="check-item">
+                            <input type="checkbox" name="shift" value="Night"> Night
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="check-item" style="background: rgba(99, 102, 241, 0.1); border-color: var(--primary);">
+                        <input type="checkbox" id="is-sos" onchange="toggleShiftVisibility()"> 
+                        <strong>SOS / As Needed</strong> (No fixed schedule)
+                    </label>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Current Pills Count</label>
+                        <input type="number" id="current-pills" placeholder="0" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Pills per Strip</label>
+                        <input type="number" id="pills-per-strip" placeholder="10" required min="1">
+                    </div>
+                </div>
+
+                <button type="submit" class="add-btn submit-btn">Save Medicine</button>
+                <button type="button" class="btn-secondary" style="width: 100%; margin-top: 0.8rem;" onclick="toggleModal(false)">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Stock Modal (New) -->
+    <div class="modal-overlay" id="stock-modal" onclick="handleStockOverlayClick(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="stock-title">Add Stock</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Adding inventory for <span id="stock-med-name" style="color: var(--primary); font-weight: 600;"></span></p>
+            </div>
+            <div class="form-group">
+                <label>Number of Strips Bought</label>
+                <input type="number" id="stock-strips" value="1" min="1" oninput="calculateTotalStock()">
+            </div>
+            <div class="form-group">
+                <label>Tablets per Strip</label>
+                <input type="number" id="stock-pills-per-strip" value="10" min="1" oninput="calculateTotalStock()">
+            </div>
+            <div style="background: rgba(99, 102, 241, 0.1); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: center;">
+                <span style="color: var(--text-muted); font-size: 0.8rem;">Total Tablets to be Added:</span>
+                <div id="total-preview" style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">10</div>
+            </div>
+            <button onclick="confirmAddStock()" class="add-btn submit-btn">Confirm Addition</button>
+            <button type="button" class="btn-secondary" style="width: 100%; margin-top: 0.8rem;" onclick="toggleStockModal(false)">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Shopping List Modal -->
+    <div class="modal-overlay" id="shopping-modal" onclick="handleShoppingOverlayClick(event)">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>Monthly Refill List</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Items needed for 30-day stock</p>
+            </div>
+            <div id="shopping-items-list" style="margin-bottom: 2rem; max-height: 60vh; overflow-y: auto; padding-right: 0.5rem;">
+                <!-- List items here -->
+            </div>
+            <button type="button" class="btn-secondary" style="width: 100%;" onclick="toggleShoppingModal(false)">Close</button>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast">Medicine added successfully!</div>
+
+    <script src="app.js"></script>
+</body>
+</html>
