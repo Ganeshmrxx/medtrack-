@@ -55,6 +55,9 @@ async function init() {
 
 // Auth Handlers
 function toggleAuthModal(show) {
+    if (show) {
+        document.getElementById('sync-id-input').value = userId === 'demo-user' ? '' : userId;
+    }
     authModal.style.display = show ? 'flex' : 'none';
 }
 
@@ -64,11 +67,17 @@ function handleAuthOverlayClick(e) {
 
 async function handleLogin() {
     const keyInput = document.getElementById('private-key-input');
+    const syncIdInput = document.getElementById('sync-id-input');
     const key = keyInput.value.trim();
+    let syncId = syncIdInput.value.trim().toLowerCase().replace(/\s+/g, '-');
     
     if (!key) {
         showToast("Please enter a key", "var(--warning)");
         return;
+    }
+
+    if (!syncId) {
+        syncId = 'personal-cloud'; // Default if none provided
     }
 
     const loginBtn = document.getElementById('login-btn-inner');
@@ -77,29 +86,29 @@ async function handleLogin() {
     loginBtn.disabled = true;
 
     try {
-        // We use userId as 'personal-cloud' or similar when private
-        const tempUserId = 'personal-cloud';
         const response = await fetch('/api/storage', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: tempUserId, action: 'load', accessKey: key })
+            body: JSON.stringify({ userId: syncId, action: 'load', accessKey: key })
         });
 
         if (response.ok) {
             const result = await response.json();
             isPrivate = true;
             accessKey = key;
-            userId = tempUserId;
+            userId = syncId;
             
             localStorage.setItem('medTrack_isPrivate', 'true');
             localStorage.setItem('medTrack_accessKey', key);
             localStorage.setItem('medTrack_userId', userId);
             
             if (result.data && result.data.length > 0) {
-                if (confirm('Cloud data found! Do you want to overwrite your local data with cloud data?')) {
+                if (confirm(`Data found for "${syncId}"! Do you want to restore it?`)) {
                     medicines = result.data;
                     localStorage.setItem('medTrack_data', JSON.stringify(medicines));
                 }
+            } else {
+                showToast(`No data found for "${syncId}". New sync created.`, "var(--warning)");
             }
 
             showToast("Private Sync Enabled!", "var(--success)");

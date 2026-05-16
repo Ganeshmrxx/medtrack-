@@ -178,12 +178,18 @@
                 <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">Enter your private key to enable cloud synchronization and data backup.</p>
             </div>
             <div class="form-group">
+                <label style="text-align: left; margin-left: 5px;">Private Key</label>
                 <input type="password" id="private-key-input" placeholder="Enter Access Key..." style="text-align: center; font-size: 1.1rem; letter-spacing: 2px;">
+            </div>
+            <div class="form-group">
+                <label style="text-align: left; margin-left: 5px;">Sync ID (e.g. ganesh-123)</label>
+                <input type="text" id="sync-id-input" placeholder="Enter your old Sync ID..." style="text-align: center; font-size: 1rem;">
             </div>
             <button onclick="handleLogin()" class="add-btn submit-btn" id="login-btn-inner">
                 <ion-icon name="cloud-upload-outline"></ion-icon>
                 Verify & Sync
             </button>
+
             <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 1.5rem;">
                 <ion-icon name="information-circle-outline" style="vertical-align: middle;"></ion-icon>
                 No key? Use app in <strong>Demo Mode</strong> (Local Only)
