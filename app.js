@@ -13,6 +13,27 @@ const totalMedsEl = document.getElementById('total-meds');
 const lowStockCountEl = document.getElementById('low-stock-count');
 const refillSoonEl = document.getElementById('refill-soon');
 
+// PWA Install Logic
+let deferredPrompt;
+const installBtn = document.getElementById('install-btn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'flex';
+});
+
+installBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            installBtn.style.display = 'none';
+        }
+        deferredPrompt = null;
+    }
+});
+
 // Initialize
 async function init() {
     await handleUserSync();
