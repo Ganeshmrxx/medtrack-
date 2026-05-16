@@ -126,21 +126,27 @@ async function handleLogin() {
 }
 
 function handleLogout() {
-    if (confirm('Logout from Private Cloud? Your data will remain on this device but won\'t sync.')) {
+    if (confirm('Logout from Private Cloud? Your private data will be cleared from this device (it remains safe in the cloud).')) {
         isPrivate = false;
         accessKey = '';
         userId = 'demo-user';
+        medicines = []; // Clear current data
+        
         localStorage.removeItem('medTrack_isPrivate');
         localStorage.removeItem('medTrack_accessKey');
+        localStorage.removeItem('medTrack_data'); // Clear local data
         localStorage.setItem('medTrack_userId', 'demo-user');
         
         document.getElementById('login-trigger').innerHTML = '<ion-icon name="key-outline"></ion-icon><span>Login</span>';
         document.getElementById('login-trigger').onclick = () => toggleAuthModal(true);
         
         updateSyncUI('Demo Mode', '#94a3b8');
-        showToast("Logged out to Demo Mode");
+        renderMedicines(); // Refresh UI
+        updateStats();
+        showToast("Logged out & Local Data Cleared");
     }
 }
+
 
 async function loadFromCloud() {
     if (!isPrivate || !accessKey) return;
