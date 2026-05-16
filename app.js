@@ -207,7 +207,10 @@ function renderMedicines() {
         card.className = `med-card ${cardClass}`;
         card.innerHTML = `
             <div class="med-header">
-                <span class="med-name">${med.name}</span>
+                <div>
+                    <div class="med-name">${med.name}</div>
+                    ${med.notes ? `<div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500; margin-top: 4px;">${med.notes}</div>` : ''}
+                </div>
                 <span class="med-status ${statusClass}">
                     ${statusText}
                 </span>
@@ -317,6 +320,7 @@ function handleStockOverlayClick(e) {
 function editMed(index) {
     const med = medicines[index];
     document.getElementById('med-name').value = med.name;
+    document.getElementById('med-notes').value = med.notes || '';
     document.getElementById('current-pills').value = med.currentPills;
     document.getElementById('pills-per-strip').value = med.pillsPerStrip;
     document.getElementById('is-sos').checked = med.isSos || false;
@@ -340,6 +344,7 @@ function editMed(index) {
 
 function updateMedicine(index) {
     medicines[index].name = document.getElementById('med-name').value;
+    medicines[index].notes = document.getElementById('med-notes').value;
     medicines[index].currentPills = parseInt(document.getElementById('current-pills').value);
     medicines[index].pillsPerStrip = parseInt(document.getElementById('pills-per-strip').value);
     medicines[index].isSos = document.getElementById('is-sos').checked;
@@ -376,6 +381,7 @@ function syncSOSStock(index) {
 function addNewMedicine(e) {
     e.preventDefault();
     const name = document.getElementById('med-name').value.trim();
+    const notes = document.getElementById('med-notes').value.trim();
     const currentPills = parseInt(document.getElementById('current-pills').value);
     const pillsPerStrip = parseInt(document.getElementById('pills-per-strip').value);
     const isSos = document.getElementById('is-sos').checked;
@@ -395,6 +401,7 @@ function addNewMedicine(e) {
 
     medicines.push({ 
         name, 
+        notes,
         currentPills, 
         pillsPerStrip, 
         isSos, 
