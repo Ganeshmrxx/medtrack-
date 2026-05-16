@@ -17,17 +17,12 @@ const refillSoonEl = document.getElementById('refill-soon');
 async function init() {
     await handleUserSync();
     if (userId) {
-        await loadFromCloud(); // Always fetch latest from cloud on startup
+        await loadFromCloud(); // Always fetch latest from cloud on startup/refresh
     }
     autoSyncStock();
     renderMedicines();
     updateStats();
     checkNotifications();
-
-    // Proactive Sync: Check for updates every 30 seconds
-    setInterval(async () => {
-        if (userId) await loadFromCloud();
-    }, 30000);
 }
 
 async function handleUserSync() {
