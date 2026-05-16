@@ -5,8 +5,11 @@ const ASSETS = [
     './',
     './index.html',
     './style.css',
-    './app.js'
+    './app.js?v=2.0',
+    './icon-512.png'
 ];
+
+
 
 self.addEventListener('install', (e) => {
     e.waitUntil(
