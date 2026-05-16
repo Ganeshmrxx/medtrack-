@@ -1,8 +1,9 @@
 {
     "name": "MedTrack | Premium Medicine Tracker",
     "short_name": "MedTrack",
-    "start_url": "index.html",
+    "start_url": "/",
     "display": "standalone",
+
     "background_color": "#0f172a",
     "theme_color": "#6366f1",
     "description": "Premium medicine tracking and refill prediction app with cloud sync.",
