@@ -45,6 +45,7 @@ async function loadFromCloud() {
         const response = await fetch('/api/storage', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            cache: 'no-store', // Force fresh data from server
             body: JSON.stringify({ userId, action: 'load' })
         });
         const result = await response.json();
@@ -77,6 +78,7 @@ async function saveToCloud() {
         const response = await fetch('/api/storage', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            cache: 'no-store', // Ensure save goes to server directly
             body: JSON.stringify({ userId, action: 'save', data: medicines })
         });
         const result = await response.json();
