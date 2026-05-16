@@ -16,10 +16,18 @@ const refillSoonEl = document.getElementById('refill-soon');
 // Initialize
 async function init() {
     await handleUserSync();
+    if (userId) {
+        await loadFromCloud(); // Always fetch latest from cloud on startup
+    }
     autoSyncStock();
     renderMedicines();
     updateStats();
     checkNotifications();
+
+    // Proactive Sync: Check for updates every 30 seconds
+    setInterval(async () => {
+        if (userId) await loadFromCloud();
+    }, 30000);
 }
 
 async function handleUserSync() {
@@ -33,9 +41,6 @@ async function handleUserSync() {
     
     if (userId) {
         updateSyncUI('Cloud Active', 'var(--success)');
-        if (medicines.length === 0) {
-            await loadFromCloud();
-        }
     }
 }
 
