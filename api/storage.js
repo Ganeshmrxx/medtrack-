@@ -1,7 +1,14 @@
 import { kv } from '@vercel/kv';
 
 export default async function handler(req, res) {
-    // Basic body check
+    // Check if KV is connected in Vercel
+    if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
+        return res.status(400).json({ 
+            error: 'Database not connected', 
+            details: 'Please click "Connect" in Vercel Storage dashboard for this project.' 
+        });
+    }
+
     if (!req.body) {
         return res.status(400).json({ error: 'Body missing' });
     }
@@ -27,7 +34,7 @@ export default async function handler(req, res) {
     } catch (error) {
         console.error('KV Storage Error:', error);
         return res.status(500).json({ 
-            error: 'Database connection failed', 
+            error: 'Database error', 
             details: error.message 
         });
     }
