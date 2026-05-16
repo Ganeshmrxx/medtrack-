@@ -1,11 +1,13 @@
 import { kv } from '@vercel/kv';
 
 export default async function handler(req, res) {
-    // Check if KV is connected in Vercel
-    if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
+    // Check for multiple possible prefixes (KV_ or STORAGE_)
+    const hasKV = process.env.KV_REST_API_URL || process.env.STORAGE_REST_API_URL;
+    
+    if (!hasKV) {
         return res.status(400).json({ 
             error: 'Database not connected', 
-            details: 'Please click "Connect" in Vercel Storage dashboard for this project.' 
+            details: 'Please ensure KV is connected in Vercel Storage dashboard.' 
         });
     }
 
