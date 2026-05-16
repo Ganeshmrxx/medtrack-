@@ -171,42 +171,32 @@
         </div>
     </div>
 
-    <!-- Notification Toast -->
-    <div id="toast">Medicine added successfully!</div>
+    <!-- Welcome Overlay (Landing Page) -->
+    <div id="welcome-overlay" class="modal-overlay" style="display: flex; background: #0f172a; z-index: 2000;">
+        <div class="modal-content" style="max-width: 440px; text-align: center; background: #1e293b; border: 1px solid rgba(255,255,255,0.05); padding: 3rem 2rem;">
+            <div style="margin-bottom: 2rem;">
+                <div style="width: 50px; height: 50px; background: var(--primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; color: white; font-weight: 800; font-size: 1.2rem; box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);">MT</div>
+                <h2 style="font-size: 1.8rem; letter-spacing: -0.5px;">Access Dashboard</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">Enter your personal key or try the demo.</p>
+            </div>
 
-    <!-- Auth Modal -->
+            <div class="form-group">
+                <input type="password" id="welcome-key-input" placeholder="Enter Personal Key..." style="text-align: center; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 1rem;">
+            </div>
 
-    <div class="modal-overlay" id="auth-modal" onclick="handleAuthOverlayClick(event)">
-        <div class="modal-content" style="max-width: 400px; text-align: center;">
-            <div class="modal-header">
-                <div style="width: 60px; height: 60px; background: rgba(99, 102, 241, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
-                    <ion-icon name="lock-closed-outline" style="font-size: 2rem; color: var(--primary);"></ion-icon>
-                </div>
-                <h2>Private Access</h2>
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">Enter your private key to enable cloud synchronization and data backup.</p>
-            </div>
-            <div class="form-group">
-                <label style="text-align: left; margin-left: 5px;">Private Key</label>
-                <input type="password" id="private-key-input" placeholder="Enter Access Key..." style="text-align: center; font-size: 1.1rem; letter-spacing: 2px;">
-            </div>
-            <div class="form-group">
-                <label style="text-align: left; margin-left: 5px;">Sync ID (e.g. ganesh-123)</label>
-                <input type="text" id="sync-id-input" placeholder="Enter your old Sync ID..." style="text-align: center; font-size: 1rem;">
-            </div>
-            <button onclick="handleLogin()" class="add-btn submit-btn" id="login-btn-inner">
-                <ion-icon name="cloud-upload-outline"></ion-icon>
-                Verify & Sync
+            <button onclick="handleWelcomeLogin()" class="add-btn submit-btn" id="welcome-login-btn" style="padding: 1rem; font-size: 1rem;">
+                Unlock Private Mode
             </button>
 
-            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 1.5rem;">
-                <ion-icon name="information-circle-outline" style="vertical-align: middle;"></ion-icon>
-                No key? Use app in <strong>Demo Mode</strong> (Local Only)
-            </p>
-            <button type="button" class="btn-secondary" style="width: 100%; margin-top: 1rem;" onclick="toggleAuthModal(false)">Close</button>
+            <button onclick="continueAsDemo()" class="btn-secondary" style="width: 100%; margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.05); border: none; font-weight: 600;">
+                Continue as Demo User
+            </button>
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <!-- Notification Toast -->
+    <div id="toast">Medicine added successfully!</div>
 
+    <script src="app.js"></script>
 </body>
 </html>

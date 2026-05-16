@@ -8,7 +8,7 @@ let accessKey = localStorage.getItem('medTrack_accessKey') || '';
 const medList = document.getElementById('med-list');
 const medForm = document.getElementById('med-form');
 const modal = document.getElementById('modal-overlay');
-const authModal = document.getElementById('auth-modal');
+const welcomeOverlay = document.getElementById('welcome-overlay');
 const toast = document.getElementById('toast');
 
 // Stats Elements
@@ -39,12 +39,26 @@ installBtn.addEventListener('click', async () => {
 
 // Initialize
 async function init() {
+    const hasMode = localStorage.getItem('medTrack_modeChosen');
+    
+    if (!hasMode) {
+        welcomeOverlay.style.display = 'flex';
+        return;
+    }
+
+    welcomeOverlay.style.display = 'none';
     updateSyncUI(isPrivate ? 'Cloud Active' : 'Demo Mode', isPrivate ? 'var(--success)' : '#94a3b8');
     
     if (isPrivate && accessKey) {
         await loadFromCloud();
         document.getElementById('login-trigger').innerHTML = '<ion-icon name="log-out-outline"></ion-icon><span>Logout</span>';
         document.getElementById('login-trigger').onclick = handleLogout;
+    } else {
+        document.getElementById('login-trigger').innerHTML = '<ion-icon name="key-outline"></ion-icon><span>Login</span>';
+        document.getElementById('login-trigger').onclick = () => {
+            localStorage.removeItem('medTrack_modeChosen');
+            location.reload();
+        };
     }
     
     autoSyncStock();
@@ -54,38 +68,22 @@ async function init() {
 }
 
 // Auth Handlers
-function toggleAuthModal(show) {
-    if (show) {
-        document.getElementById('sync-id-input').value = userId === 'demo-user' ? '' : userId;
-    }
-    authModal.style.display = show ? 'flex' : 'none';
-}
-
-function handleAuthOverlayClick(e) {
-    if (e.target === authModal) toggleAuthModal(false);
-}
-
-async function handleLogin() {
-    const keyInput = document.getElementById('private-key-input');
-    const syncIdInput = document.getElementById('sync-id-input');
+async function handleWelcomeLogin() {
+    const keyInput = document.getElementById('welcome-key-input');
     const key = keyInput.value.trim();
-    let syncId = syncIdInput.value.trim().toLowerCase().replace(/\s+/g, '-');
     
     if (!key) {
-        showToast("Please enter a key", "var(--warning)");
+        showToast("Please enter your key", "var(--warning)");
         return;
     }
 
-    if (!syncId) {
-        syncId = 'personal-cloud'; // Default if none provided
-    }
-
-    const loginBtn = document.getElementById('login-btn-inner');
-    const originalText = loginBtn.innerHTML;
+    const loginBtn = document.getElementById('welcome-login-btn');
     loginBtn.innerHTML = '<ion-icon name="sync-outline" class="spin"></ion-icon> Verifying...';
     loginBtn.disabled = true;
 
     try {
+        // Use the key itself as the userId (Same private key is old key)
+        const syncId = key.toLowerCase().replace(/\s+/g, '-');
         const response = await fetch('/api/storage', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -101,49 +99,41 @@ async function handleLogin() {
             localStorage.setItem('medTrack_isPrivate', 'true');
             localStorage.setItem('medTrack_accessKey', key);
             localStorage.setItem('medTrack_userId', userId);
+            localStorage.setItem('medTrack_modeChosen', 'true');
             
             if (result.data && result.data.length > 0) {
-                if (confirm(`Data found for "${syncId}"! Do you want to restore it?`)) {
-                    medicines = result.data;
-                    localStorage.setItem('medTrack_data', JSON.stringify(medicines));
-                }
-            } else {
-                showToast(`No data found for "${syncId}". New sync created.`, "var(--warning)");
+                medicines = result.data;
+                localStorage.setItem('medTrack_data', JSON.stringify(medicines));
             }
 
-            showToast("Private Sync Enabled!", "var(--success)");
-            toggleAuthModal(false);
-            init(); // Re-init UI
+            showToast("Welcome Back!", "var(--success)");
+            init();
         } else {
             showToast("Invalid Key: Access Denied", "var(--danger)");
         }
     } catch (e) {
         showToast("Connection Error", "var(--danger)");
     } finally {
-        loginBtn.innerHTML = originalText;
+        loginBtn.innerHTML = "Unlock Private Mode";
         loginBtn.disabled = false;
     }
 }
 
+function continueAsDemo() {
+    isPrivate = false;
+    userId = 'demo-user';
+    localStorage.setItem('medTrack_isPrivate', 'false');
+    localStorage.setItem('medTrack_userId', 'demo-user');
+    localStorage.setItem('medTrack_modeChosen', 'true');
+    
+    showToast("Using Demo Mode");
+    init();
+}
+
 function handleLogout() {
-    if (confirm('Logout from Private Cloud? Your private data will be cleared from this device (it remains safe in the cloud).')) {
-        isPrivate = false;
-        accessKey = '';
-        userId = 'demo-user';
-        medicines = []; // Clear current data
-        
-        localStorage.removeItem('medTrack_isPrivate');
-        localStorage.removeItem('medTrack_accessKey');
-        localStorage.removeItem('medTrack_data'); // Clear local data
-        localStorage.setItem('medTrack_userId', 'demo-user');
-        
-        document.getElementById('login-trigger').innerHTML = '<ion-icon name="key-outline"></ion-icon><span>Login</span>';
-        document.getElementById('login-trigger').onclick = () => toggleAuthModal(true);
-        
-        updateSyncUI('Demo Mode', '#94a3b8');
-        renderMedicines(); // Refresh UI
-        updateStats();
-        showToast("Logged out & Local Data Cleared");
+    if (confirm('Logout from Private Cloud? Your data will be cleared from this device.')) {
+        localStorage.clear();
+        location.reload();
     }
 }
 
