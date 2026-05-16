@@ -1,0 +1,12 @@
+{
+  "name": "medtrack",
+  "version": "1.0.0",
+  "description": "Premium Medicine Tracker PWA",
+  "main": "index.html",
+  "scripts": {
+    "start": "serve ."
+  },
+  "keywords": [],
+  "author": "Ganeshmrxx",
+  "license": "ISC"
+}
