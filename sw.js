@@ -1,4 +1,5 @@
-const CACHE_NAME = 'medtrack-v3';
+const CACHE_NAME = 'medtrack-v4';
+
 
 const ASSETS = [
     './',
