@@ -1,11 +1,14 @@
 // State Management
 let medicines = JSON.parse(localStorage.getItem('medTrack_data')) || [];
-let userId = localStorage.getItem('medTrack_userId') || null;
+let userId = localStorage.getItem('medTrack_userId') || 'demo-user';
+let isPrivate = localStorage.getItem('medTrack_isPrivate') === 'true';
+let accessKey = localStorage.getItem('medTrack_accessKey') || '';
 
 // DOM Elements
 const medList = document.getElementById('med-list');
 const medForm = document.getElementById('med-form');
 const modal = document.getElementById('modal-overlay');
+const authModal = document.getElementById('auth-modal');
 const toast = document.getElementById('toast');
 
 // Stats Elements
@@ -36,44 +39,120 @@ installBtn.addEventListener('click', async () => {
 
 // Initialize
 async function init() {
-    await handleUserSync();
-    if (userId) {
-        await loadFromCloud(); // Always fetch latest from cloud on startup/refresh
+    updateSyncUI(isPrivate ? 'Cloud Active' : 'Demo Mode', isPrivate ? 'var(--success)' : '#94a3b8');
+    
+    if (isPrivate && accessKey) {
+        await loadFromCloud();
+        document.getElementById('login-trigger').innerHTML = '<ion-icon name="log-out-outline"></ion-icon><span>Logout</span>';
+        document.getElementById('login-trigger').onclick = handleLogout;
     }
+    
     autoSyncStock();
     renderMedicines();
     updateStats();
     checkNotifications();
 }
 
-async function handleUserSync() {
-    if (!userId) {
-        userId = prompt("CREATE SYNC CODE: Enter a unique code to backup your data (e.g. ganesh-123). \n\nYou can use this same code later to restore your data on any device.");
-        if (userId) {
-            userId = userId.trim().toLowerCase().replace(/\s+/g, '-');
-            localStorage.setItem('medTrack_userId', userId);
-        }
-    }
+// Auth Handlers
+function toggleAuthModal(show) {
+    authModal.style.display = show ? 'flex' : 'none';
+}
+
+function handleAuthOverlayClick(e) {
+    if (e.target === authModal) toggleAuthModal(false);
+}
+
+async function handleLogin() {
+    const keyInput = document.getElementById('private-key-input');
+    const key = keyInput.value.trim();
     
-    if (userId) {
-        updateSyncUI('Cloud Active', 'var(--success)');
+    if (!key) {
+        showToast("Please enter a key", "var(--warning)");
+        return;
+    }
+
+    const loginBtn = document.getElementById('login-btn-inner');
+    const originalText = loginBtn.innerHTML;
+    loginBtn.innerHTML = '<ion-icon name="sync-outline" class="spin"></ion-icon> Verifying...';
+    loginBtn.disabled = true;
+
+    try {
+        // We use userId as 'personal-cloud' or similar when private
+        const tempUserId = 'personal-cloud';
+        const response = await fetch('/api/storage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: tempUserId, action: 'load', accessKey: key })
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            isPrivate = true;
+            accessKey = key;
+            userId = tempUserId;
+            
+            localStorage.setItem('medTrack_isPrivate', 'true');
+            localStorage.setItem('medTrack_accessKey', key);
+            localStorage.setItem('medTrack_userId', userId);
+            
+            if (result.data && result.data.length > 0) {
+                if (confirm('Cloud data found! Do you want to overwrite your local data with cloud data?')) {
+                    medicines = result.data;
+                    localStorage.setItem('medTrack_data', JSON.stringify(medicines));
+                }
+            }
+
+            showToast("Private Sync Enabled!", "var(--success)");
+            toggleAuthModal(false);
+            init(); // Re-init UI
+        } else {
+            showToast("Invalid Key: Access Denied", "var(--danger)");
+        }
+    } catch (e) {
+        showToast("Connection Error", "var(--danger)");
+    } finally {
+        loginBtn.innerHTML = originalText;
+        loginBtn.disabled = false;
+    }
+}
+
+function handleLogout() {
+    if (confirm('Logout from Private Cloud? Your data will remain on this device but won\'t sync.')) {
+        isPrivate = false;
+        accessKey = '';
+        userId = 'demo-user';
+        localStorage.removeItem('medTrack_isPrivate');
+        localStorage.removeItem('medTrack_accessKey');
+        localStorage.setItem('medTrack_userId', 'demo-user');
+        
+        document.getElementById('login-trigger').innerHTML = '<ion-icon name="key-outline"></ion-icon><span>Login</span>';
+        document.getElementById('login-trigger').onclick = () => toggleAuthModal(true);
+        
+        updateSyncUI('Demo Mode', '#94a3b8');
+        showToast("Logged out to Demo Mode");
     }
 }
 
 async function loadFromCloud() {
+    if (!isPrivate || !accessKey) return;
+    
     try {
         updateSyncUI('Syncing...', 'var(--warning)');
         const response = await fetch('/api/storage', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            cache: 'no-store', // Force fresh data from server
-            body: JSON.stringify({ userId, action: 'load' })
+            cache: 'no-store',
+            body: JSON.stringify({ userId, action: 'load', accessKey })
         });
         const result = await response.json();
         
         if (!response.ok) {
-            showToast(`Sync Fail: ${result.error || 'Check Vercel Connect'}`, 'var(--danger)');
-            updateSyncUI('Sync Fail', 'var(--danger)');
+            if (response.status === 401) {
+                handleLogout();
+                showToast("Session Expired: Invalid Key", "var(--danger)");
+            } else {
+                updateSyncUI('Sync Fail', 'var(--danger)');
+            }
             return;
         }
 
@@ -82,34 +161,31 @@ async function loadFromCloud() {
             localStorage.setItem('medTrack_data', JSON.stringify(medicines));
             renderMedicines();
             updateStats();
-            updateSyncUI('Restored', 'var(--success)');
-        } else {
-            updateSyncUI('Synced', 'var(--success)');
+            updateSyncUI('Cloud Active', 'var(--success)');
         }
     } catch (e) {
-        updateSyncUI('Sync Error', 'var(--danger)');
-        showToast("Network Error: Check internet", "var(--danger)");
+        updateSyncUI('Offline', 'var(--danger)');
     }
 }
 
 async function saveToCloud() {
-    if (!userId) return;
+    if (!isPrivate || !accessKey) return;
+    
     try {
         updateSyncUI('Saving...', 'var(--warning)');
         const response = await fetch('/api/storage', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            cache: 'no-store', // Ensure save goes to server directly
-            body: JSON.stringify({ userId, action: 'save', data: medicines })
+            cache: 'no-store',
+            body: JSON.stringify({ userId, action: 'save', data: medicines, accessKey })
         });
-        const result = await response.json();
         
         if (!response.ok) {
-            updateSyncUI('Offline', 'var(--danger)');
+            updateSyncUI('Sync Fail', 'var(--danger)');
             return;
         }
         
-        updateSyncUI('Synced', 'var(--success)');
+        updateSyncUI('Cloud Active', 'var(--success)');
     } catch (e) {
         updateSyncUI('Offline', 'var(--danger)');
     }

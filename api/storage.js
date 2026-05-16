@@ -1,7 +1,6 @@
 import { kv } from '@vercel/kv';
 
 export default async function handler(req, res) {
-    // Check for multiple possible prefixes (KV_ or STORAGE_)
     const hasKV = process.env.KV_REST_API_URL || process.env.STORAGE_REST_API_URL;
     
     if (!hasKV) {
@@ -15,7 +14,17 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Body missing' });
     }
 
-    const { userId, action, data } = req.body;
+    const { userId, action, data, accessKey } = req.body;
+
+    // Security Check: Verify Private Key
+    const PRIVATE_KEY = process.env.Prvt_key;
+    
+    if (accessKey !== PRIVATE_KEY) {
+        return res.status(401).json({ 
+            error: 'Unauthorized', 
+            details: 'Invalid or missing private access key. Cloud sync is disabled for demo users.' 
+        });
+    }
 
     if (!userId) {
         return res.status(400).json({ error: 'User ID is required' });
@@ -41,3 +50,4 @@ export default async function handler(req, res) {
         });
     }
 }
+
