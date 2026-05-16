@@ -18,10 +18,13 @@
             <div class="logo">
                 <h1>MedTrack.</h1>
             </div>
-            <div style="display: flex; gap: 1rem; align-items: center;">
-                <button class="add-btn" onclick="showShoppingList()" style="background: var(--warning); box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);">
+            <div style="display: flex; gap: 0.8rem; align-items: center;">
+                <div id="sync-indicator" style="font-size: 0.7rem; color: var(--text-muted); background: var(--glass-bg); padding: 0.4rem 0.8rem; border-radius: 20px; display: flex; align-items: center; gap: 5px;">
+                    <div style="width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted);" id="sync-dot"></div>
+                    <span id="sync-text">Cloud Offline</span>
+                </div>
+                <button class="add-btn" onclick="showShoppingList()" style="background: var(--warning); box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); padding: 0.8rem;">
                     <ion-icon name="cart-outline"></ion-icon>
-                    Shopping List
                 </button>
                 <button class="add-btn" onclick="requestNotificationPermission()" id="notif-btn" style="background: var(--glass-bg); box-shadow: none; padding: 0.8rem;">
                     <ion-icon name="notifications-outline"></ion-icon>

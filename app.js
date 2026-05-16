@@ -1,5 +1,6 @@
 // State Management
 let medicines = JSON.parse(localStorage.getItem('medTrack_data')) || [];
+let userId = localStorage.getItem('medTrack_userId') || null;
 
 // DOM Elements
 const medList = document.getElementById('med-list');
@@ -13,11 +14,76 @@ const lowStockCountEl = document.getElementById('low-stock-count');
 const refillSoonEl = document.getElementById('refill-soon');
 
 // Initialize
-function init() {
+async function init() {
+    await handleUserSync();
     autoSyncStock();
     renderMedicines();
     updateStats();
     checkNotifications();
+}
+
+async function handleUserSync() {
+    if (!userId) {
+        userId = prompt("CREATE SYNC CODE: Enter a unique code to backup your data (e.g. ganesh-123). \n\nYou can use this same code later to restore your data on any device.");
+        if (userId) {
+            userId = userId.trim().toLowerCase().replace(/\s+/g, '-');
+            localStorage.setItem('medTrack_userId', userId);
+        }
+    }
+    
+    if (userId) {
+        updateSyncUI('Cloud Active', 'var(--success)');
+        if (medicines.length === 0) {
+            await loadFromCloud();
+        }
+    }
+}
+
+async function loadFromCloud() {
+    try {
+        updateSyncUI('Syncing...', 'var(--warning)');
+        const response = await fetch('/api/storage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, action: 'load' })
+        });
+        const result = await response.json();
+        if (result.data) {
+            medicines = result.data;
+            localStorage.setItem('medTrack_data', JSON.stringify(medicines));
+            renderMedicines();
+            updateStats();
+            updateSyncUI('Restored', 'var(--success)');
+        } else {
+            updateSyncUI('Synced', 'var(--success)');
+        }
+    } catch (e) {
+        updateSyncUI('Sync Error', 'var(--danger)');
+    }
+}
+
+async function saveToCloud() {
+    if (!userId) return;
+    try {
+        updateSyncUI('Saving...', 'var(--warning)');
+        await fetch('/api/storage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, action: 'save', data: medicines })
+        });
+        updateSyncUI('Synced', 'var(--success)');
+    } catch (e) {
+        updateSyncUI('Offline', 'var(--danger)');
+    }
+}
+
+function updateSyncUI(text, color) {
+    const el = document.getElementById('sync-text');
+    const dot = document.getElementById('sync-dot');
+    if (el && dot) {
+        el.textContent = text;
+        dot.style.background = color;
+    }
 }
 
 // Auto-sync stock based on days passed
@@ -317,6 +383,7 @@ function saveData() {
     localStorage.setItem('medTrack_data', JSON.stringify(medicines));
     renderMedicines();
     updateStats();
+    saveToCloud();
 }
 
 // Stats Update
