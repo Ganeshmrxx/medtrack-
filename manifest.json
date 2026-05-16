@@ -1,16 +1,28 @@
 {
-    "name": "MedTrack Intelligent Medicine Tracker",
+    "name": "MedTrack | Premium Medicine Tracker",
     "short_name": "MedTrack",
     "start_url": "index.html",
     "display": "standalone",
     "background_color": "#0f172a",
     "theme_color": "#6366f1",
-    "description": "Premium medicine tracking and refill prediction app.",
+    "description": "Premium medicine tracking and refill prediction app with cloud sync.",
     "icons": [
         {
-            "src": "https://cdn-icons-png.flaticon.com/512/822/822143.png",
+            "src": "icon-512.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icon-512.png",
             "sizes": "512x512",
             "type": "image/png"
+        },
+        {
+            "src": "icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
         }
     ]
 }
+
